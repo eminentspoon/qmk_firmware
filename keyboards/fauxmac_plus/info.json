@@ -48,7 +48,7 @@
             "rgb_test": true,
             "snake": true,
             "static_gradient": true,
-            "twinkle": true
+            "twinkle": false
         }
     },
     "layouts": {

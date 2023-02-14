@@ -32,7 +32,12 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][2] = {
 #endif
 // clang-format on
 
+bool some_key_pressed = false;
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    if (record->event.pressed){
+        some_key_pressed = true;
+    }
     switch (keycode) {
         case LT(0, KC_ENTER):
             if (!record->tap.count && record->event.pressed) {
@@ -46,6 +51,18 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 return false;
             }
             return true;
+    }
+    return true;
+}
+
+//oled_rotation_t oled_init_user(oled_rotation_t rotation) { return OLED_ROTATION_270; }
+
+static bool should_render_bongocat = false;
+extern void render_bongocat(void);
+bool oled_task_user(void) {
+    if (should_render_bongocat) {
+        render_bongocat();
+        return false;
     }
     return true;
 }
