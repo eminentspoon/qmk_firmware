@@ -3,20 +3,6 @@
 
 #pragma once
 
-#define OLED_BRIGHTNESS 1
+#define OLED_UPDATE_INTERVAL 50
 
-/*
- * Feature disable options
- *  These options are also useful to firmware size reduction.
- */
-
-/* disable debug print */
-//#define NO_DEBUG
-
-/* disable print */
-//#define NO_PRINT
-
-/* disable action features */
-//#define NO_ACTION_LAYER
-//#define NO_ACTION_TAPPING
-//#define NO_ACTION_ONESHOT
+#define RGBLIGHT_DEFAULT_HUE 100
