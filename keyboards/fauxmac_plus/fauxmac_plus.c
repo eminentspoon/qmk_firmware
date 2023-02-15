@@ -7,6 +7,7 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case QK_BOOT:
 #if defined(RGBLIGHT_ENABLE)
+            rgblight_mode_noeeprom(RGBLIGHT_MODE_STATIC_LIGHT);
             rgblight_sethsv_noeeprom(0, 255, 255);
 #endif
 #if defined(OLED_ENABLE)
