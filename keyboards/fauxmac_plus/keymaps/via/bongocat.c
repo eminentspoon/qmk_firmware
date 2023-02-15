@@ -71,8 +71,13 @@ static void oled_write_compressed_P(compressed_oled_frame_t frame) {
     }
 }
 
-void render_bongocat(void) {
-    extern bool some_key_pressed;
+static bool some_key_pressed = false;
+
+void bongocat_trigger(void) {
+    some_key_pressed = true;
+}
+
+void bongocat_render(void) {
     if (some_key_pressed || timer_elapsed32(bongo_timer) > IDLE_FRAME_DURATION) {
         if (last_input_activity_elapsed() > OLED_TIMEOUT) {
             oled_off();

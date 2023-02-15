@@ -2,8 +2,23 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include QMK_KEYBOARD_H
+#include "bongocat.h"
 
-enum keymap_layers { _NUM, _MOV, _ADJ};
+enum keymap_layers { _NUM, _MOV, _ADJ };
+
+enum oled_display_modes { oled_mode_default = 1, oled_mode_off, oled_mode_bongocat };
+enum via_custom_oled_value { id_oled_display_mode = 1 };
+
+static uint8_t current_oled_display_mode = oled_mode_default;
+
+typedef union {
+    uint32_t raw;
+    struct {
+        uint8_t oled_display_mode;
+    };
+} custom_via_config_t;
+
+static custom_via_config_t via_config;
 
 // clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -36,11 +51,11 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][2] = {
 #endif
 // clang-format on
 
-bool some_key_pressed = false;
-
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     if (record->event.pressed) {
-        some_key_pressed = true;
+        if (current_oled_display_mode == oled_mode_bongocat) {
+            bongocat_trigger();
+        }
     }
     switch (keycode) {
         case LT(0, KC_ENTER):
@@ -59,17 +74,30 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
-enum oled_display_modes { oled_mode_default = 1, oled_mode_off, oled_mode_bongocat };
+void set_oled_rotation_by_mode(void) {
+    switch (current_oled_display_mode) {
+        case oled_mode_bongocat:
+            oled_init(OLED_ROTATION_0);
+            break;
+        default:
+            oled_init(OLED_ROTATION_270);
+            break;
+    }
+}
 
-uint8_t current_oled_display_mode = oled_mode_default;
-
-extern void render_bongocat(void);
+void keyboard_post_init_user(void) {
+    via_config.raw = eeconfig_read_user();
+    if (current_oled_display_mode != via_config.oled_display_mode) {
+        current_oled_display_mode = via_config.oled_display_mode;
+        set_oled_rotation_by_mode();
+    };
+}
 
 bool oled_task_user(void) {
     switch (current_oled_display_mode) {
         case oled_mode_bongocat:
             if (oled_on()) {
-                render_bongocat();
+                bongocat_render();
             };
             return false;
         case oled_mode_off:
@@ -80,8 +108,6 @@ bool oled_task_user(void) {
     }
 }
 
-enum via_custom_oled_value { id_oled_display_mode = 1 };
-
 void custom_oled_config_set_value(uint8_t *data) {
     // data = [ value_id, value_data ]
     uint8_t *value_id   = &(data[0]);
@@ -90,14 +116,7 @@ void custom_oled_config_set_value(uint8_t *data) {
     switch (*value_id) {
         case id_oled_display_mode: {
             current_oled_display_mode = *value_data;
-            switch (current_oled_display_mode) {
-                case oled_mode_bongocat:
-                    oled_init(OLED_ROTATION_0);
-                    break;
-                default:
-                    oled_init(OLED_ROTATION_270);
-                    break;
-            }
+            set_oled_rotation_by_mode();
             break;
         }
     }
@@ -117,7 +136,8 @@ void custom_oled_config_get_value(uint8_t *data) {
 }
 
 void custom_oled_config_config_save(void) {
-    // Don't save
+    via_config.oled_display_mode = current_oled_display_mode;
+    eeconfig_update_user(via_config.raw);
 }
 
 void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
@@ -146,4 +166,10 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
         }
         return;
     }
+}
+
+void eeconfig_init_user(void) {
+    via_config.raw               = 0;
+    via_config.oled_display_mode = oled_mode_default;
+    eeconfig_update_user(via_config.raw);
 }
