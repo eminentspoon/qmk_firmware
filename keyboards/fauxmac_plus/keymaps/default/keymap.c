@@ -1,12 +1,9 @@
 // Copyright 2023 Dasky (@daskygit)
 // SPDX-License-Identifier: GPL-2.0-or-later
- 
+
 #include QMK_KEYBOARD_H
 
-enum keymap_layers {
-    _NUM,
-    _MOV
-};
+enum keymap_layers { _NUM, _MOV };
 
 // clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {

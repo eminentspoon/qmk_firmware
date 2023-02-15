@@ -1,12 +1,9 @@
 // Copyright 2023 Dasky (@daskygit)
 // SPDX-License-Identifier: GPL-2.0-or-later
- 
+
 #include QMK_KEYBOARD_H
 
-enum keymap_layers {
-    _NUM,
-    _MOV
-};
+enum keymap_layers { _NUM, _MOV };
 
 // clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -35,7 +32,7 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][2] = {
 bool some_key_pressed = false;
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    if (record->event.pressed){
+    if (record->event.pressed) {
         some_key_pressed = true;
     }
     switch (keycode) {
@@ -55,14 +52,89 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
-//oled_rotation_t oled_init_user(oled_rotation_t rotation) { return OLED_ROTATION_270; }
+enum oled_display_modes { oled_mode_default = 1, oled_mode_off, oled_mode_bongocat };
 
-static bool should_render_bongocat = false;
+uint8_t current_oled_display_mode = oled_mode_default;
+
 extern void render_bongocat(void);
+
 bool oled_task_user(void) {
-    if (should_render_bongocat) {
-        render_bongocat();
-        return false;
+    switch (current_oled_display_mode) {
+        case oled_mode_bongocat:
+            render_bongocat();
+            return false;
+        case oled_mode_off:
+            oled_clear();
+            return false;
+        default:
+            return true;
     }
-    return true;
+}
+
+enum via_custom_oled_value { id_oled_display_mode = 1 };
+
+void custom_oled_config_set_value(uint8_t *data) {
+    // data = [ value_id, value_data ]
+    uint8_t *value_id   = &(data[0]);
+    uint8_t *value_data = &(data[1]);
+
+    switch (*value_id) {
+        case id_oled_display_mode: {
+            current_oled_display_mode = *value_data;
+            switch (current_oled_display_mode) {
+                case oled_mode_bongocat:
+                    oled_init(OLED_ROTATION_0);
+                    break;
+                default:
+                    oled_init(OLED_ROTATION_270);
+                    break;
+            }
+            break;
+        }
+    }
+}
+
+void custom_oled_config_get_value(uint8_t *data) {
+    // data = [ value_id, value_data ]
+    uint8_t *value_id   = &(data[0]);
+    uint8_t *value_data = &(data[1]);
+
+    switch (*value_id) {
+        case id_oled_display_mode: {
+            *value_data = current_oled_display_mode;
+            break;
+        }
+    }
+}
+
+void custom_oled_config_config_save(void) {
+    // Don't save
+}
+
+void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
+    uint8_t *command_id        = &(data[0]);
+    uint8_t *channel_id        = &(data[1]);
+    uint8_t *value_id_and_data = &(data[2]);
+
+    if (*channel_id == id_custom_channel) {
+        switch (*command_id) {
+            case id_custom_set_value: {
+                custom_oled_config_set_value(value_id_and_data);
+                break;
+            }
+            case id_custom_get_value: {
+                custom_oled_config_get_value(value_id_and_data);
+                break;
+            }
+            case id_custom_save: {
+                custom_oled_config_config_save();
+                break;
+            }
+            default: {
+                *command_id = id_unhandled;
+                break;
+            }
+        }
+        return;
+    }
 }
