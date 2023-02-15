@@ -4,5 +4,6 @@
 #pragma once
 
 #define OLED_UPDATE_INTERVAL 50
+#define OLED_TIMEOUT 30000
 
 #define RGBLIGHT_DEFAULT_HUE 100

@@ -72,8 +72,14 @@ static void oled_write_compressed_P(compressed_oled_frame_t frame) {
 }
 
 void render_bongocat(void) {
-    // assumes 1 frame prep stage
-    void animation_phase(void) {
+    extern bool some_key_pressed;
+    if (some_key_pressed || timer_elapsed32(bongo_timer) > IDLE_FRAME_DURATION) {
+        if (last_input_activity_elapsed() > OLED_TIMEOUT) {
+            oled_off();
+            return;
+        }
+        some_key_pressed = false;
+        bongo_timer      = timer_read32();
         if (last_matrix_activity_elapsed() > IDLE_FRAME_DURATION) {
             current_idle_frame = (current_idle_frame + 1) % IDLE_FRAMES;
             oled_write_compressed_P(idle[current_idle_frame]);
@@ -81,11 +87,5 @@ void render_bongocat(void) {
             oled_write_compressed_P(tap[toggle_tap_frame]);
             toggle_tap_frame = !toggle_tap_frame;
         }
-    }
-    extern bool some_key_pressed;
-    if (some_key_pressed || timer_elapsed32(bongo_timer) > IDLE_FRAME_DURATION) {
-        some_key_pressed = false;
-        bongo_timer      = timer_read32();
-        animation_phase();
     }
 }

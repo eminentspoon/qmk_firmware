@@ -61,7 +61,9 @@ extern void render_bongocat(void);
 bool oled_task_user(void) {
     switch (current_oled_display_mode) {
         case oled_mode_bongocat:
-            render_bongocat();
+            if (oled_on()) {
+                render_bongocat();
+            };
             return false;
         case oled_mode_off:
             oled_clear();
