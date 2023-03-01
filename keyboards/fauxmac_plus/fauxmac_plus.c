@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "quantum.h"
+#include "os_detection.h"
 
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
@@ -53,6 +54,29 @@ static void render_logo(void) {
     oled_write_raw_P(fx_logo, sizeof(fx_logo));
 }
 
+static void render_os(void) {
+    static const char PROGMEM lin_logo[] = {0x20, 0x20, 0x99, 0x9A, 0x20, 0x20, 0x20, 0xB9, 0xBA, 0x20, 0};
+    static const char PROGMEM win_logo[] = {0x20, 0x20, 0x97, 0x98, 0x20, 0x20, 0x20, 0xB7, 0xB8, 0x20, 0};
+    static const char PROGMEM ban_logo[] = {0x20, 0x20, 0x95, 0x96, 0x20, 0x20, 0x20, 0xB5, 0xB6, 0x20, 0};
+    static const char PROGMEM qmk_logo[] = {0x20, 0x81, 0x82, 0x83, 0x84, 0x20, 0xA1, 0xA2, 0xA3, 0xA4, 0x20, 0xC1, 0xC2, 0xC3, 0xC4, 0};
+    switch (detected_host_os()) {
+        case OS_WINDOWS:
+            oled_write_P(win_logo, false);
+            break;
+        case OS_LINUX:
+            oled_write_P(lin_logo, false);
+            break;
+        case OS_MACOS:
+        case OS_IOS:
+            oled_write_P(ban_logo, false);
+            break;
+        default:
+            oled_write_P(qmk_logo, false);
+            return;
+    }
+    oled_advance_page(true);
+}
+
 bool oled_task_kb(void) {
     if (!oled_task_user()) {
         return false;
@@ -77,6 +101,10 @@ bool oled_task_kb(void) {
         oled_write_P(PSTR(" CAP "), host_keyboard_led_state().caps_lock);
         oled_advance_page(true);
         oled_write_P(PSTR(" SCR "), host_keyboard_led_state().scroll_lock);
+        oled_advance_page(true);
+        oled_advance_page(true);
+
+        render_os();
     }
     return true;
 }

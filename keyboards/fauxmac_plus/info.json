@@ -14,7 +14,8 @@
         "rgblight": true,
         "encoder": true,
         "lto": true,
-        "oled": true
+        "oled": true,
+        "os_detection": true
     },
     "matrix_pins": {
         "cols": ["F6", "F5", "F4"],
