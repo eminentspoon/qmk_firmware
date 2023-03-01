@@ -74,13 +74,21 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
+uint8_t return_valid_oled_mode(uint8_t attempted_mode) {
+    switch (attempted_mode) {
+        case oled_mode_default ... oled_mode_bongocat:
+            return attempted_mode;
+        default:
+            return oled_mode_default;
+    }
+}
+
 void set_oled_rotation_by_mode(void) {
     switch (current_oled_display_mode) {
         case oled_mode_bongocat:
             oled_init(OLED_ROTATION_0);
             break;
         default:
-            oled_init(OLED_ROTATION_270);
             break;
     }
 }
@@ -88,7 +96,7 @@ void set_oled_rotation_by_mode(void) {
 void keyboard_post_init_user(void) {
     via_config.raw = eeconfig_read_user();
     if (current_oled_display_mode != via_config.oled_display_mode) {
-        current_oled_display_mode = via_config.oled_display_mode;
+        current_oled_display_mode = return_valid_oled_mode(via_config.oled_display_mode);
         set_oled_rotation_by_mode();
     };
 }
@@ -115,7 +123,7 @@ void custom_oled_config_set_value(uint8_t *data) {
 
     switch (*value_id) {
         case id_oled_display_mode: {
-            current_oled_display_mode = *value_data;
+            current_oled_display_mode = return_valid_oled_mode(*value_data);
             set_oled_rotation_by_mode();
             break;
         }
@@ -129,14 +137,14 @@ void custom_oled_config_get_value(uint8_t *data) {
 
     switch (*value_id) {
         case id_oled_display_mode: {
-            *value_data = current_oled_display_mode;
+            *value_data = return_valid_oled_mode(current_oled_display_mode);
             break;
         }
     }
 }
 
 void custom_oled_config_config_save(void) {
-    via_config.oled_display_mode = current_oled_display_mode;
+    via_config.oled_display_mode = return_valid_oled_mode(current_oled_display_mode);
     eeconfig_update_user(via_config.raw);
 }
 
