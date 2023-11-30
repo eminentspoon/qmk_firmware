@@ -9,3 +9,4 @@
 #define RGBLIGHT_DEFAULT_HUE 100
 
 #define TAP_CODE_DELAY 10
+#define WS2812_DI_PIN B6
